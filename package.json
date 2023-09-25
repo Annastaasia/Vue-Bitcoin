@@ -1,5 +1,5 @@
 {
-  "name": "vue-test",
+  "name": "vue-bitcoin",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -30,8 +30,7 @@
       "eslint:recommended"
     ],
     "parserOptions": {
-      "parser": "@babel/eslint-parser",
-      "requireConfigFile»": false
+      "parser": "@babel/eslint-parser"
     },
     "rules": {}
   },
