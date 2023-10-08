@@ -96,11 +96,13 @@
         <hr class="w-full border-t border-gray-600 my-4" />
         <div>
           <button
+            @click="page = page - 1"
             class="my-4 mx-2 inline-flex items-center py-2 px-4 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-full text-white bg-gray-600 hover:bg-gray-700 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
           >
             Назад
           </button>
           <button
+            @click="page = page + 1"
             class="my-4 mx-2 inline-flex items-center py-2 px-4 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-full text-white bg-gray-600 hover:bg-gray-700 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
           >
             Вперед
@@ -226,9 +228,14 @@ export default {
 
   methods: {
     filteredList() {
-      return this.tickers.filter((ticker) =>
-        ticker.name.includes(ticker.filter)
-      );
+      const start = (this.page - 1) * 6;
+      const end = this.page * 6;
+      //1 page (0,5)
+      //2 page (6,11)
+      // 6 * (page - 1), 6 * page -1
+      return this.tickers
+        .filter((ticker) => ticker.name.includes(this.filter))
+        .slice(start, end);
     },
 
     subscribeToUpdate(tickerName) {
@@ -255,7 +262,7 @@ export default {
       };
 
       this.tickers.push(newTicker);
-      // this.filter = "";
+      this.filter = "";
 
       localStorage.setItem("cryptonomicon-list", JSON.stringify(this.tickers));
       this.subscribeToUpdate(newTicker.name);
