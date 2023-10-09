@@ -103,13 +103,13 @@
             Назад
           </button>
           <button
-            @click="page = page + 1"
+            @click="page = +page + 1"
             v-if="hasNextPage"
             class="my-4 mx-2 inline-flex items-center py-2 px-4 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-full text-white bg-gray-600 hover:bg-gray-700 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
           >
             Вперед
           </button>
-          <div>Фильтр: <input v-model="filter" /></div>
+          <div>Фильтр: <input v-model="filter" page="1" /></div>
         </div>
 
         <hr class="w-full border-t border-gray-600 my-4" />
@@ -307,14 +307,12 @@ export default {
   watch: {
     filter() {
       this.page = 1;
-
       window.history.pushState(
         null,
         document.title,
         `${window.location.pathname}?filter=${this.filter}&page=${this.page}`
       );
     },
-
     page() {
       window.history.pushState(
         null,
