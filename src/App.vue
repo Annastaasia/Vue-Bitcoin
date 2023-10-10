@@ -109,7 +109,9 @@
           >
             Вперед
           </button>
-          <div>Фильтр: <input v-model="filter" page="1" /></div>
+          <div>
+            Фильтр: <input v-model="filter" @input="page = 1" page="1" />
+          </div>
         </div>
 
         <hr class="w-full border-t border-gray-600 my-4" />
@@ -204,6 +206,7 @@ export default {
   data() {
     return {
       ticker: "",
+      filter: "",
       tickers: [
         // { name: "BTC", price: "5" },
         // { name: "VUE", price: "10" },
@@ -213,7 +216,6 @@ export default {
       sel: null,
       graph: [],
       page: 1,
-      filter: "",
       hasNextPage: true,
     };
   },
