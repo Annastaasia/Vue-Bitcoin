@@ -128,7 +128,7 @@
                 {{ t.name }} - USD
               </dt>
               <dd class="mt-1 text-3xl font-semibold text-gray-900">
-                {{ t.price }}
+                {{ formatPrice(t.price) }}
               </dd>
             </div>
             <div class="w-full border-t border-gray-200"></div>
@@ -201,7 +201,7 @@
 </template>
 
 <script>
-import { loadTicker } from "./api.js";
+import { subscribeToTicker } from "./api.js";
 
 export default {
   name: "App",
@@ -240,9 +240,11 @@ export default {
     if (tickersData) {
       this.tickers = JSON.parse(tickersData);
       this.tickers.forEach((ticker) => {
-        this.updateTuckers(ticker.name);
+        this.subscribeToTicker(ticker.name, () => {});
       });
     }
+
+    setInterval(this.updateTickers, 5000);
   },
 
   computed: {
@@ -288,23 +290,38 @@ export default {
   },
 
   methods: {
-    async updateTuckers(tickerName) {
-      setInterval(async () => {
-        const exchangeData = await loadTicker(this.tickers.map((t) => t.name));
-        this.ticker.forEach((ticker) => {
-          const price = exchangeData[ticker.name.toUpperCase()];
-          ticker.price = price;
-        });
-        this.tickers.find((t) => t.name === tickerName).price =
-          exchangeData.USD > 1
-            ? exchangeData.USD.toFixed(2)
-            : exchangeData.USD.toPrecision(2);
+    formatPrice(price) {
+      if (price === "-") {
+        return price;
+      }
+      return price > 1 ? price.toFixed(2) : price.toPrecision(2);
+    },
 
-        if (this.selectedTickers?.name === tickerName) {
-          this.graph.push(exchangeData.USD);
-        }
-      }, 3000);
-      this.ticker = "";
+    async updateTickers() {
+      if (!this.tickers.length) {
+        return;
+      }
+
+      const exchangeData = await loadTickers(this.tickers.map((t) => t.name));
+
+      this.tickers.forEach((ticker) => {
+        const price = exchangeData[ticker.name.toUpperCase()];
+        ticker.price = price ?? "-";
+
+        // if (!price) {
+        //   ticker.price = "-";
+        //   return;
+        // }
+      });
+      // this.tickers.find((t) => t.name === tickerName).price =
+      //   exchangeData.USD > 1
+      //     ? exchangeData.USD.toFixed(2)
+      //     : exchangeData.USD.toPrecision(2);
+
+      // if (this.selectedTickers?.name === tickerName) {
+      //   this.graph.push(exchangeData.USD);
+      // }
+      // this.ticker = "";
     },
 
     add() {
@@ -315,8 +332,8 @@ export default {
 
       this.tickers = [...this.tickers, newTicker];
       this.filter = "";
-
-      this.subscribeToUpdate(newTicker.name);
+      subscribeToTicker(this.ticker.name, () => {});
+      // this.subscribeToUpdate(newTicker.name);
     },
 
     select(ticker) {
