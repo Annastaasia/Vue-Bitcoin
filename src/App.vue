@@ -201,7 +201,7 @@
 </template>
 
 <script>
-import { subscribeToTicker } from "./api.js";
+import { subscribeToTicker, unsubscribeToTicker } from "./api.js";
 
 export default {
   name: "App",
@@ -240,7 +240,9 @@ export default {
     if (tickersData) {
       this.tickers = JSON.parse(tickersData);
       this.tickers.forEach((ticker) => {
-        this.subscribeToTicker(ticker.name, () => {});
+        subscribeToTicker(ticker.name, (newPrice) =>
+          this.updateTicker(ticker.name, newPrice)
+        );
       });
     }
 
@@ -290,6 +292,14 @@ export default {
   },
 
   methods: {
+    updateTicker(tickerName, price) {
+      this.tickers
+        .filter((t) => t.name === tickerName)
+        .forEach((t) => {
+          t.price === price;
+        });
+    },
+
     formatPrice(price) {
       if (price === "-") {
         return price;
@@ -297,55 +307,31 @@ export default {
       return price > 1 ? price.toFixed(2) : price.toPrecision(2);
     },
 
-    async updateTickers() {
-      if (!this.tickers.length) {
-        return;
-      }
-
-      const exchangeData = await loadTickers(this.tickers.map((t) => t.name));
-
-      this.tickers.forEach((ticker) => {
-        const price = exchangeData[ticker.name.toUpperCase()];
-        ticker.price = price ?? "-";
-
-        // if (!price) {
-        //   ticker.price = "-";
-        //   return;
-        // }
-      });
-      // this.tickers.find((t) => t.name === tickerName).price =
-      //   exchangeData.USD > 1
-      //     ? exchangeData.USD.toFixed(2)
-      //     : exchangeData.USD.toPrecision(2);
-
-      // if (this.selectedTickers?.name === tickerName) {
-      //   this.graph.push(exchangeData.USD);
-      // }
-      // this.ticker = "";
-    },
-
     add() {
-      const newTicker = {
+      const currentTicker = {
         name: this.ticker,
         price: "-",
       };
 
-      this.tickers = [...this.tickers, newTicker];
+      this.tickers = [...this.tickers, currentTicker];
+      this.tickers = "";
       this.filter = "";
-      subscribeToTicker(this.ticker.name, () => {});
-      // this.subscribeToUpdate(newTicker.name);
+      subscribeToTicker(currentTicker, (newPrice) =>
+        this.updateTicker(currentTicker.name, newPrice)
+      );
     },
 
     select(ticker) {
       this.selectedTickers = ticker;
     },
 
-    handleDelete(tickersToRemove) {
-      this.tickers = this.tickers.filter((t) => t !== tickersToRemove);
+    handleDelete(tickerToRemove) {
+      this.tickers = this.tickers.filter((t) => t !== tickerToRemove);
 
-      if (this.selectedTickers === tickersToRemove) {
+      if (this.selectedTickers === tickerToRemove) {
         this.selectedTickers = null;
       }
+      unsubscribeToTicker(tickerToRemove.name);
     },
   },
 
