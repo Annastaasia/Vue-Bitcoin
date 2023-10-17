@@ -201,7 +201,7 @@
 </template>
 
 <script>
-import { subscribeToTicker, unsubscribeToTicker } from "./api.js";
+import { subscribeToTicker, unsubscribeFromTicker } from "./api";
 
 export default {
   name: "App",
@@ -258,16 +258,16 @@ export default {
       return this.page * 6;
     },
 
-    filteredList() {
+    filteredTickers() {
       return this.tickers.filter((ticker) => ticker.name.includes(this.filter));
     },
 
     paginationTickers() {
-      return this.filteredList.slice(this.startIndex, this.endIndex);
+      return this.filteredTickers.slice(this.startIndex, this.endIndex);
     },
 
     hasNextPage() {
-      return this.filteredList.length > this.endIndex;
+      return this.filteredTickers.length > this.endIndex;
     },
 
     normilizedGraph() {
@@ -296,6 +296,12 @@ export default {
       this.tickers
         .filter((t) => t.name === tickerName)
         .forEach((t) => {
+          if (t === this.selectedTicker) {
+            this.graph.push(price);
+            while (this.graph.length > this.maxGraphElements) {
+              this.graph.shift();
+            }
+          }
           t.price === price;
         });
     },
@@ -331,7 +337,7 @@ export default {
       if (this.selectedTickers === tickerToRemove) {
         this.selectedTickers = null;
       }
-      unsubscribeToTicker(tickerToRemove.name);
+      unsubscribeFromTicker(tickerToRemove.name);
     },
   },
 

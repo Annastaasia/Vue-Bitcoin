@@ -5,65 +5,76 @@ const socket = new WebSocket(
     `wss://streamer.cryptocompare.com/v2?api_key=${API_KEY}`
 );
 
-const AGGREGATE_INDEX = 5;
+const AGGREGATE_INDEX = "5";
 
 socket.addEventListener('message', e => {
-    const messageContent = JSON.parse(e.data)
-    if (messageContent.TYPE !== AGGREGATE_INDEX) {
+    const { TYPE: type, FROMSYMBOL: currency, PRICE: newPrice } = JSON.parse(e.data)
+    if (type !== AGGREGATE_INDEX || newPrice === undefined) {
         return
     }
+    // debugger;
+    const handlers = tickersHandlers.get(currency) ?? [];
+    handlers.forEach(fn => fn(newPrice))
 })
 
-
-export const loadTickers = () => {
-    if (tickersHandlers.size === 0) { return; }
-
-
-    fetch(
-        `https://min-api.cryptocompare.com/data/pricemulti?fsyms=${[
-            ...tickersHandlers.keys()
-        ].join(",")}&tsyms=USD&api_key=${API_KEY} `
-    )
-        .then(r => r.json())
-        .then(rowData => {
-            const updatePrices = Object.fromEntries(
-                Object.entries(rowData).map(([key, value]) => [key, value.USD])
-            );
-
-
-            Object.entries(updatePrices).forEach(([currency, newPrice]) => {
-                const handlers = tickersHandlers.get(currency) ?? [];
-                handlers.forEach(fn => fn(newPrice))
-            });
-        });
-
-};
-
-function subscribeToTickerOnWS(ticker) {
-    const message = JSON.stringify({
-        action: "SubAdd",
-        subs: [`5~CCCAGG~${ticker}~USD`]
-
-    });
+function sendToWebSocket(message) {
+    const stringifiedMessage = JSON.stringify(message);
     if (socket.readyState === WebSocket.OPEN) {
-        socket.send(message)
+        socket.send(stringifiedMessage)
         return
     }
-    socket.addEventListener('open', () => { socket.send(message) }, { once: true })
+    socket.addEventListener('open', () => { socket.send(stringifiedMessage) }, { once: true })
+}
+
+function subscribeToTickerOnWS(ticker) {
+    sendToWebSocket({
+        action: "SubAdd",
+        subs: [`5~CCCAGG~${ticker}~USD`]
+    });
+}
+
+function unsubscribeFromTickerOnWS(ticker) {
+    sendToWebSocket({
+        action: "SubRemove",
+        subs: [`5~CCCAGG~${ticker}~USD`]
+    });
 }
 
 export const subscribeToTicker = (ticker, callback) => {
-
     const subscribes = tickersHandlers.get(ticker) || [];
     tickersHandlers.set(ticker, [...subscribes, callback])
     subscribeToTickerOnWS()
 }
 
-export const unsubscribeToTicker = (ticker, callback) => {
-    const subscribes = tickersHandlers.get(ticker) || [];
-    tickersHandlers.set(ticker, subscribes.filter(f => f !== callback))
+export const unsubscribeToTicker = ticker => {
+    tickersHandlers.delete(ticker);
+    unsubscribeFromTickerOnWS(ticker);
+
 }
 
-setInterval(loadTickers, 5000);
+// window.tickersHandlers = tickersHandlers
 
-window.tickersHandlers = tickersHandlers
+
+// export const loadTickers = () => {
+//     if (tickersHandlers.size === 0) { return; }
+
+//     fetch(
+//         `https://min-api.cryptocompare.com/data/pricemulti?fsyms=${[
+//             ...tickersHandlers.keys()
+//         ].join(",")}&tsyms=USD&api_key=${API_KEY} `
+//     )
+//         .then(r => r.json())
+//         .then(rowData => {
+//             const updatePrices = Object.fromEntries(
+//                 Object.entries(rowData).map(([key, value]) => [key, value.USD])
+//             );
+
+//             Object.entries(updatePrices).forEach(([currency, newPrice]) => {
+//                 const handlers = tickersHandlers.get(currency) ?? [];
+//                 handlers.forEach(fn => fn(newPrice))
+//             });
+//         });
+// };
+
+
+// setInterval(loadTickers, 5000);
