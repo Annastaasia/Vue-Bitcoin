@@ -227,13 +227,13 @@ export default {
       new URL(window.location).searchParams.entries()
     );
 
-    if (windowData.filter) {
-      this.filter = windowData.filter;
-    }
+    const VALID_KEYS = ["filter", "page"];
 
-    if (windowData.page) {
-      this.page = windowData.page;
-    }
+    VALID_KEYS.forEach((key) => {
+      if (windowData[key]) {
+        this[key] = windowData[key];
+      }
+    });
 
     const tickersData = localStorage.getItem("cryptonomicon-list");
 
@@ -328,6 +328,7 @@ export default {
     },
 
     select(ticker) {
+      console.log(ticker);
       this.selectedTickers = ticker;
     },
 
