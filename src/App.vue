@@ -160,7 +160,10 @@
         <h3 class="text-lg leading-6 font-medium text-gray-900 my-8">
           {{ selectedTickers.name }} - USD
         </h3>
-        <div class="flex items-end border-gray-600 border-b border-l h-64">
+        <div
+          class="flex items-end border-gray-600 border-b border-l h-64"
+          ref="graph"
+        >
           <div
             v-for="(bar, index) in normilizedGraph"
             :key="index"
@@ -217,12 +220,19 @@ export default {
       ],
       selectedTickers: null,
       graph: [],
+      maxGraphElements: 1,
       page: 1,
       // hasNextPage: true, - его можно посчитать, поэтому ему не место в дата
     };
   },
 
   created() {
+    // console.log("created", this.$refs.graph);
+
+    window.addEventListener("resize", this.calculateMaxGraphElements);
+
+    window.removeEventListener("resize", this.calculateMaxGraphElements);
+
     const windowData = Object.fromEntries(
       new URL(window.location).searchParams.entries()
     );
@@ -292,6 +302,13 @@ export default {
   },
 
   methods: {
+    calculateMaxGraphElements() {
+      if (!this.$refs.graph) {
+        return;
+      }
+      this.maxGraphElements = this.$refs.graph.clientWidht / 38;
+    },
+
     updateTicker(tickerName, price) {
       this.tickers
         .filter((t) => t.name === tickerName)
