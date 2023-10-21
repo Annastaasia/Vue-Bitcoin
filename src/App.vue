@@ -345,7 +345,6 @@ export default {
     },
 
     select(ticker) {
-      console.log(ticker);
       this.selectedTickers = ticker;
     },
 
@@ -362,6 +361,9 @@ export default {
   watch: {
     selectedTickers() {
       this.graph = [];
+      this.$nextTick().then(() => {
+        this.calculateMaxGraphElements();
+      });
     },
 
     tickers() {
