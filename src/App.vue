@@ -1,6 +1,3 @@
-<!-- v-on:keydown.enter="add" -->
-<!-- <label>Тикер {{ ticker }}</label> -->
-
 <template>
   <div class="container mx-auto flex flex-col items-center bg-gray-100 p-4">
     <!-- <div
@@ -70,26 +67,7 @@
             <div class="text-sm text-red-600">Такой тикер уже добавлен</div>
           </div>
         </div>
-        <button
-          @click="add"
-          type="button"
-          class="my-4 inline-flex items-center py-2 px-4 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-full text-white bg-gray-600 hover:bg-gray-700 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
-        >
-          <!-- Heroicon name: solid/mail -->
-          <svg
-            class="-ml-0.5 mr-2 h-6 w-6"
-            xmlns="http://www.w3.org/2000/svg"
-            width="30"
-            height="30"
-            viewBox="0 0 24 24"
-            fill="#ffffff"
-          >
-            <path
-              d="M13 7h-2v4H7v2h4v4h2v-4h4v-2h-4V7zm-1-5C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"
-            ></path>
-          </svg>
-          Добавить
-        </button>
+        <AddButton @click="add" type="button" class="my-4" />
       </section>
 
       <template v-if="tickers.length">
@@ -205,13 +183,20 @@
 
 <script>
 import { subscribeToTicker, unsubscribeFromTicker } from "./api";
+import AddButton from "./components/AddButton.vue";
 
 export default {
   name: "App",
+
+  components: {
+    AddButton,
+  },
+
   data() {
     return {
-      ticker: "",
       filter: "",
+
+      ticker: "",
       tickers: [
         // { name: "BTC", price: "5" },
         // { name: "VUE", price: "10" },
@@ -229,21 +214,29 @@ export default {
   created() {
     // console.log("created", this.$refs.graph);
 
-    window.addEventListener("resize", this.calculateMaxGraphElements);
+    // window.addEventListener("resize", this.calculateMaxGraphElements);
 
-    window.removeEventListener("resize", this.calculateMaxGraphElements);
+    // window.removeEventListener("resize", this.calculateMaxGraphElements);
 
     const windowData = Object.fromEntries(
       new URL(window.location).searchParams.entries()
     );
 
-    const VALID_KEYS = ["filter", "page"];
+    // const VALID_KEYS = ["filter", "page"];
 
-    VALID_KEYS.forEach((key) => {
-      if (windowData[key]) {
-        this[key] = windowData[key];
-      }
-    });
+    // VALID_KEYS.forEach((key) => {
+    //   if (windowData[key]) {
+    //     this[key] = windowData[key];
+    //   }
+    // });
+
+    if (windowData.filter) {
+      this.filter = windowData.filter;
+    }
+
+    if (windowData.page) {
+      this.page = windowData.page;
+    }
 
     const tickersData = localStorage.getItem("cryptonomicon-list");
 
@@ -259,6 +252,14 @@ export default {
     setInterval(this.updateTickers, 5000);
   },
 
+  mounted() {
+    window.addEventListener("resize", this.calculateMaxGraphElements);
+  },
+
+  beforeUnmount() {
+    window.removeEventListener("resize", this.calculateMaxGraphElements);
+  },
+
   computed: {
     startIndex() {
       return (this.page - 1) * 6;
@@ -268,8 +269,15 @@ export default {
       return this.page * 6;
     },
 
+    // filteredTickers() {
+    //   return this.tickers.filter((ticker) => ticker.name.includes(this.filter));
+    // },
+
     filteredTickers() {
-      return this.tickers.filter((ticker) => ticker.name.includes(this.filter));
+      return this.tickers.filter(
+        (ticker) =>
+          typeof ticker.name === "string" && ticker.name.includes(this.filter)
+      );
     },
 
     paginationTickers() {
@@ -285,7 +293,7 @@ export default {
       const minValue = Math.min(...this.graph);
 
       if (maxValue === minValue) {
-        this.graph.map(() => 50);
+        return this.graph.map(() => 50);
       }
 
       return this.graph.map(
@@ -313,13 +321,13 @@ export default {
       this.tickers
         .filter((t) => t.name === tickerName)
         .forEach((t) => {
-          if (t === this.selectedTicker) {
+          if (t === this.selectedTickers) {
             this.graph.push(price);
             while (this.graph.length > this.maxGraphElements) {
               this.graph.shift();
             }
           }
-          t.price === price;
+          t.price = price;
         });
     },
 
@@ -337,9 +345,9 @@ export default {
       };
 
       this.tickers = [...this.tickers, currentTicker];
-      this.tickers = "";
+      this.ticker = "";
       this.filter = "";
-      subscribeToTicker(currentTicker, (newPrice) =>
+      subscribeToTicker(currentTicker.name, (newPrice) =>
         this.updateTicker(currentTicker.name, newPrice)
       );
     },

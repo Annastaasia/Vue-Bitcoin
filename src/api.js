@@ -8,7 +8,7 @@ const socket = new WebSocket(
 const AGGREGATE_INDEX = "5";
 
 socket.addEventListener('message', e => {
-    const { TYPE: type, FROMSYMBOL: currency, PRICE: newPrice } = JSON.parse(e.data)
+    const { TYPE: type, FROMSYMBOL: currency, PRICE: newPrice } = JSON.parse(e.data);
     if (type !== AGGREGATE_INDEX || newPrice === undefined) {
         return
     }
@@ -21,7 +21,7 @@ function sendToWebSocket(message) {
     const stringifiedMessage = JSON.stringify(message);
     if (socket.readyState === WebSocket.OPEN) {
         socket.send(stringifiedMessage)
-        return
+        return;
     }
     socket.addEventListener('open', () => { socket.send(stringifiedMessage) }, { once: true })
 }
@@ -29,7 +29,7 @@ function sendToWebSocket(message) {
 function subscribeToTickerOnWS(ticker) {
     sendToWebSocket({
         action: "SubAdd",
-        subs: [`5~CCCAGG~${ticker}~USD`]
+        subs: [`5~CCCAGG~${ticker}~USD`],
     });
 }
 
@@ -43,7 +43,7 @@ function unsubscribeFromTickerOnWS(ticker) {
 export const subscribeToTicker = (ticker, callback) => {
     const subscribes = tickersHandlers.get(ticker) || [];
     tickersHandlers.set(ticker, [...subscribes, callback])
-    subscribeToTickerOnWS()
+    subscribeToTickerOnWS(ticker)
 }
 
 export const unsubscribeToTicker = ticker => {
