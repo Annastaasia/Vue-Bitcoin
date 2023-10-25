@@ -46,10 +46,9 @@ export const subscribeToTicker = (ticker, callback) => {
     subscribeToTickerOnWS(ticker)
 }
 
-export const unsubscribeToTicker = ticker => {
+export const unsubscribeFromTicker = ticker => {
     tickersHandlers.delete(ticker);
     unsubscribeFromTickerOnWS(ticker);
-
 }
 
 // window.tickersHandlers = tickersHandlers

@@ -25,51 +25,7 @@
       </svg>
     </div> -->
     <div class="container">
-      <section>
-        <div class="flex">
-          <div class="max-w-xs">
-            <label for="wallet" class="block text-sm font-medium text-gray-700"
-              >Тикер</label
-            >
-            <div class="mt-1 relative rounded-md shadow-md">
-              <input
-                v-model="ticker"
-                @keydown.enter="add"
-                type="text"
-                name="wallet"
-                id="wallet"
-                class="block w-full pr-10 border-gray-300 text-gray-900 focus:outline-none focus:ring-gray-500 focus:border-gray-500 sm:text-sm rounded-md"
-                placeholder="Например DOGE"
-              />
-            </div>
-            <div class="flex bg-white p-1 rounded-md flex-wrap">
-              <span
-                class="inline-flex items-center px-2 m-1 rounded-md text-xs font-medium bg-gray-300 text-gray-800 cursor-pointer"
-              >
-                BTC
-              </span>
-              <span
-                class="inline-flex items-center px-2 m-1 rounded-md text-xs font-medium bg-gray-300 text-gray-800 cursor-pointer"
-              >
-                DOGE
-              </span>
-              <span
-                class="inline-flex items-center px-2 m-1 rounded-md text-xs font-medium bg-gray-300 text-gray-800 cursor-pointer"
-              >
-                BCH
-              </span>
-              <span
-                class="inline-flex items-center px-2 m-1 rounded-md text-xs font-medium bg-gray-300 text-gray-800 cursor-pointer"
-              >
-                DASH
-              </span>
-            </div>
-            <div class="text-sm text-red-600">Такой тикер уже добавлен</div>
-          </div>
-        </div>
-        <AddButton @click="add" type="button" class="my-4" />
-      </section>
-
+      <AddTicker @add-ticker="add" :disabled="tooManyTickersAdded" />
       <template v-if="tickers.length">
         <hr class="w-full border-t border-gray-600 my-4" />
         <div>
@@ -183,20 +139,20 @@
 
 <script>
 import { subscribeToTicker, unsubscribeFromTicker } from "./api";
-import AddButton from "./components/AddButton.vue";
+import AddTicker from "./components/AddTicker.vue";
 
 export default {
   name: "App",
 
   components: {
-    AddButton,
+    AddTicker,
   },
 
   data() {
     return {
       filter: "",
 
-      ticker: "",
+      // ticker: "",
       tickers: [
         // { name: "BTC", price: "5" },
         // { name: "VUE", price: "10" },
@@ -261,6 +217,10 @@ export default {
   },
 
   computed: {
+    tooManyTickersAdded() {
+      return this.tickers.length > 10;
+    },
+
     startIndex() {
       return (this.page - 1) * 6;
     },
@@ -338,14 +298,14 @@ export default {
       return price > 1 ? price.toFixed(2) : price.toPrecision(2);
     },
 
-    add() {
+    add(ticker) {
       const currentTicker = {
-        name: this.ticker,
+        name: ticker,
         price: "-",
       };
 
       this.tickers = [...this.tickers, currentTicker];
-      this.ticker = "";
+      // this.ticker = "";
       this.filter = "";
       subscribeToTicker(currentTicker.name, (newPrice) =>
         this.updateTicker(currentTicker.name, newPrice)
